@@ -17,10 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    peopletracking.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    peopletracking.h
 
 FORMS += \
     mainwindow.ui
@@ -30,5 +32,6 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+
 INCLUDEPATH += /usr/local/include/opencv4
-LIBS += -L/usr/local/lib
+LIBS += -L/usr/local/lib/ -lopencv_core -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio
