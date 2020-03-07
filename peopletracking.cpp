@@ -1,20 +1,23 @@
 #include "peopletracking.h"
+#include "renderwidget.h"
 #include <unistd.h>
+#include <string>
 peopleTracking::peopleTracking(){
     this->pMOG2 = createBackgroundSubtractorMOG2(1000, 200, false);
-    this->THRESHOLD_VALUE = 20;
-    this->BLUR_SIZE = 20;
+    this->THRESHOLD_VALUE = 200;
+    this->BLUR_SIZE = 30;
     this->isDebugMode = false;
     this->isTrackingEnabled = true;
-    this->isPaused = false;
+    this->isPaused = true;
     this->isProcessStarted = false;
 }
-void peopleTracking::startProcessing(QLabel *labelToDraw){
+void peopleTracking::startProcessing(QWidget *widgetToDraw){
     struct timespec pause_sleep_time = {0, 10000000};
+    peoplePassed = 0;
     Mat frame, gray, thresholdImage, bluredImage;
     while(cap.get(CAP_PROP_POS_FRAMES)< cap.get(CAP_PROP_FRAME_COUNT)-1){
-//        nanosleep(&pause_sleep_time,&pause_sleep_time);
-        if(!isPaused){
+        nanosleep(&pause_sleep_time,&pause_sleep_time);
+        if(!isPaused || frame.empty()){
             cap.read(frame);
             resize(frame,frame,Size(480,270));
             cvtColor(frame, gray, COLOR_BGR2GRAY);
@@ -27,25 +30,37 @@ void peopleTracking::startProcessing(QLabel *labelToDraw){
             imshow("final frame edit", bluredImage);
         if(isTrackingEnabled)
             searchForMove(bluredImage, drawableFrame);
-        labelToDraw->setPixmap(QPixmap::fromImage(QImage(drawableFrame.data,
-                                                         drawableFrame.cols,
-                                                         drawableFrame.rows,
-                                                         drawableFrame.step, QImage::Format_BGR888)));
+        rectangle(drawableFrame,Point(0,0),Point(120,20),Scalar(255,255,255),-1);
+        putText(drawableFrame,"Passed->"+to_string(peoplePassed),Point(5,15),FONT_HERSHEY_PLAIN,1,Scalar(0,0,0));
+        ((RenderWidget*)(widgetToDraw))->updateFrame(QImage(drawableFrame.data,
+                                         drawableFrame.cols,
+                                         drawableFrame.rows,
+                                         drawableFrame.step, QImage::Format_BGR888));
         if(isPaused)
             nanosleep(&pause_sleep_time,&pause_sleep_time);
     }
     cap.release();
-    labelToDraw->setText("end of video");
     isProcessStarted = false;
 }
+void peopleTracking::setBorder(QPointF start, QPointF end, bool isInverted){
+    this->start = start;
+    this->end = end;
+    if(start.x()==end.x())
+        end.setX(end.x()+0.01f);
+    this->isInverted = isInverted;
+}
+
+
 void peopleTracking::registerObject(Point2f pos){
     objects.insert(pair<int,Point2f>(nextId, pos));
     disappeared.insert(pair<int,int>(nextId,0));
+    isPassed.insert(pair<int,bool>(nextId, false));
     nextId++;
 }
 void peopleTracking::deRegisterObject(int id){
     objects.erase(id);
     disappeared.erase(id);
+    isPassed.erase(id);
 }
 
 struct distEl{
@@ -55,7 +70,7 @@ struct distEl{
     bool isActive;
 };
 void peopleTracking::searchForMove(Mat &thresholdImage, Mat &cameraFeed){
-    int maxDisappear = 10;
+    int maxDisappear = 5;
         Mat tmp;
         thresholdImage.copyTo(tmp);
         vector<vector<Point>> contours;
@@ -120,6 +135,12 @@ void peopleTracking::searchForMove(Mat &thresholdImage, Mat &cameraFeed){
                 }
             }
             for(int i=0;i<paired.size();i++){
+                QLineF border(start,end), move(QPointF(objects[paired[i].id].x,objects[paired[i].id].y),QPointF(paired[i].centroid.x,paired[i].centroid.y));
+                QPointF point;
+                if(!isPassed[paired[i].id] &&border.intersects(move,&point)== QLineF::IntersectType::BoundedIntersection){
+                    peoplePassed++;
+                    isPassed[paired[i].id] = true;
+                }
                 objects[paired[i].id] = paired[i].centroid;
                 disappeared[paired[i].id] = 0;
             }

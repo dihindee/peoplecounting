@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "peopletracking.h"
+#include "renderwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,7 +17,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     unique_ptr<peopleTracking> tracker;
     ~MainWindow();
-
+    void togglePause();
 private slots:
     void on_actionOpen_video_triggered();
 
@@ -32,5 +33,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QWidget *renderer;
 };
 #endif // MAINWINDOW_H

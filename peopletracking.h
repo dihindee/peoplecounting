@@ -19,15 +19,20 @@ public:
     bool isTrackingEnabled;
     bool isPaused;
     bool isProcessStarted;
+    QPointF start,end;
+    bool isInverted;
+    int peoplePassed = 0;
 
     peopleTracking();
-    void startProcessing(QLabel *labelToDraw);
+    void startProcessing(QWidget *widgetToDraw);
     void searchForMove(Mat &thresholdImage, Mat &cameraFeed);
+    void setBorder(QPointF start, QPointF end, bool isInverted);
 protected:
     void registerObject(Point2f pos);
     void deRegisterObject(int id);
     map<int, Point2f> objects;
     map<int, int> disappeared;
+    map<int, bool> isPassed;
     int nextId;
 };
 

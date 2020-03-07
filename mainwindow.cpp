@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "renderwidget.h"
 #include <QFileDialog>
 #include <QThread>
 #include "peopletracking.h"
@@ -9,6 +10,12 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->renderer =  new RenderWidget();
+    ui->drawLayout->addWidget(renderer);
+    ((RenderWidget*)renderer)->parentWindow = this;
+    renderer->repaint();
+//    ((RenderWidget*)(ui->drawWidget))->parentWindow = this;
+//    ((RenderWidget*)(ui->drawWidget))->repaint();
 }
 
 MainWindow::~MainWindow()
@@ -26,7 +33,7 @@ void MainWindow::on_actionOpen_video_triggered()
         if(!tracker->cap.isOpened())
             cerr << "error opening video" << endl;
         if(!tracker->isProcessStarted){
-            QThread *thread = QThread::create([this]{this->tracker->startProcessing(this->ui->img_label);});
+            QThread *thread = QThread::create([this]{this->tracker->startProcessing(this->renderer);});
 //            tracker->startProcessing(this->ui->img_label);
             thread->start();
         }
@@ -36,13 +43,11 @@ void MainWindow::on_actionOpen_video_triggered()
 void MainWindow::on_thresholdSlider_valueChanged(int value)
 {
     tracker->THRESHOLD_VALUE = value;
-    cout << "new THRESHOLD_VALUE: " << value << endl;
 }
 
 void MainWindow::on_blurSlider_valueChanged(int value)
 {
     tracker->BLUR_SIZE = value;
-    cout << "new BLUR_SIZE: " << value << endl;
 }
 
 
@@ -55,9 +60,11 @@ void MainWindow::on_trackingBox_stateChanged(int arg1)
 {
     tracker->isTrackingEnabled  = (arg1!=0);
 }
-
-void MainWindow::on_playPauseButton_clicked()
-{
+void MainWindow::togglePause(){
     tracker->isPaused = !tracker->isPaused;
     this->ui->playPauseButton->setText(tracker->isPaused?"Play":"Pause");
+}
+void MainWindow::on_playPauseButton_clicked()
+{
+    togglePause();
 }

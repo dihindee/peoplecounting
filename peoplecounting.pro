@@ -18,11 +18,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    peopletracking.cpp
+    peopletracking.cpp \
+    renderwidget.cpp
 
 HEADERS += \
     mainwindow.h \
-    peopletracking.h
+    peopletracking.h \
+    renderwidget.h
 
 FORMS += \
     mainwindow.ui
