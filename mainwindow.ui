@@ -79,6 +79,9 @@
        <property name="text">
         <string>Tracking</string>
        </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>

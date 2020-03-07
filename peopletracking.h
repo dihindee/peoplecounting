@@ -23,6 +23,12 @@ public:
     peopleTracking();
     void startProcessing(QLabel *labelToDraw);
     void searchForMove(Mat &thresholdImage, Mat &cameraFeed);
+protected:
+    void registerObject(Point2f pos);
+    void deRegisterObject(int id);
+    map<int, Point2f> objects;
+    map<int, int> disappeared;
+    int nextId;
 };
 
 #endif // PEOPLETRACKING_H
